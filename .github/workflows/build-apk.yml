@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,8 +29,18 @@ jobs:
       - name: Compiler l'APK de test
         run: gradle :app:assembleDebug --no-daemon
 
-      - name: Déposer l'APK à télécharger
+      - name: Renommer l'APK avec le numéro de build
+        run: cp app/build/outputs/apk/debug/app-debug.apk NettoyeurDoublons-build${{ github.run_number }}.apk
+
+      - name: Publier l'APK dans une Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Nettoyeur de doublons (build ${{ github.run_number }})
+          files: NettoyeurDoublons-build${{ github.run_number }}.apk
+
+      - name: Déposer aussi l'APK comme artefact
         uses: actions/upload-artifact@v4
         with:
           name: nettoyeur-doublons-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: NettoyeurDoublons-build${{ github.run_number }}.apk
